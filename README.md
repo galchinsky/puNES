@@ -1,3 +1,9 @@
+<h1>puNES for amblyopia treatment</h1>
+
+NES graphics contains of background and sprites. The idea is to use red-blue glases and render sprites only for lazy eye. Remaining background is to help to keep eyes aligned while sprites are to reduce supression in the lazy eye. There are two executables in the archive. `punes_blue.exe` renders full picture only for blue glass while red glass will see only background tiles. `punes_red.exe` does the opposite. So it depends on what eye is lazy and what glasses you have (red-blue or blue-red). But I think that glasses that have blue glass for lazy eye are better because this will make the whole picture for this eye more colorful.
+
+Download link (win64): https://github.com/galchinsky/puNES/releases/tag/0.104a
+
 <h1>puNES</h1>
 
 <span class="badge-paypal"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QPPXNRL5NAHDC" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-yellow.svg" alt="PayPal donate button" /></a></span>
