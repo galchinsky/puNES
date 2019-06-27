@@ -129,7 +129,8 @@ EXTERNC struct _gfx {
 		struct _gfx_filter_data {
 			void *palette;
 			uint32_t pitch;
-			void *pix;
+			void *pix_left;
+			void *pix_right;
 			WORD width;
 			WORD height;
 		} data;

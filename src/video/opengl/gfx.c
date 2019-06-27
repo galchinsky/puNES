@@ -454,19 +454,29 @@ void gfx_draw_screen(void) {
 		return;
 	}
 
-	screen.rd = screen.wr;
+	screen.rd_left = screen.wr_left;
+	screen.rd_right = screen.wr_right;
 
 	if (info.doublebuffer == TRUE) {
 		screen.index = !screen.index;
-		screen.last_completed_wr = screen.wr;
-		screen.wr = &screen.buff[screen.index];
+		screen.last_completed_wr_left = screen.wr_left;
+		screen.last_completed_wr_right = screen.wr_right;
+		screen.wr_left = &screen.buff_left[screen.index];
+		screen.wr_right = &screen.buff_right[screen.index];
 	} else {
-		screen.rd = screen.wr = screen.last_completed_wr;
+		screen.rd_left = screen.wr_left = screen.last_completed_wr_left;
+		screen.rd_right = screen.wr_right = screen.last_completed_wr_right;
 	}
 
-	if (screen.rd->ready == FALSE) {
-		screen.rd->ready = TRUE;
+	// do we really need this "if"? weird
+	if (screen.rd_left->ready == FALSE) {
+		screen.rd_left->ready = TRUE;
 	}
+
+	if (screen.rd_right->ready == FALSE) {
+		screen.rd_right->ready = TRUE;
+	}
+
 }
 
 uint32_t gfx_color(BYTE a, BYTE r, BYTE g, BYTE b) {
@@ -595,7 +605,8 @@ void gfx_apply_filter(void) {
 
 	// applico l'effetto desiderato
 	gfx.filter.data.pitch = opengl.surface.pitch;
-	gfx.filter.data.pix = opengl.surface.pixels;
+	gfx.filter.data.pix_left = opengl.surface.pixels_left;
+	gfx.filter.data.pix_right = opengl.surface.pixels_right;
 	gfx.filter.data.width = opengl.surface.w;
 	gfx.filter.data.height = opengl.surface.h;
 	gfx.filter.func();

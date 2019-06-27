@@ -154,10 +154,14 @@ typedef struct _screen_buffer {
 } _screen_buffer;
 typedef struct _screen {
 	BYTE index;
-	_screen_buffer *wr;
-	_screen_buffer *rd;
-	_screen_buffer *last_completed_wr;
-	_screen_buffer buff[2];
+	_screen_buffer *wr_left;
+	_screen_buffer *wr_right;
+	_screen_buffer *rd_left;
+	_screen_buffer *rd_right;
+	_screen_buffer *last_completed_wr_left;
+	_screen_buffer *last_completed_wr_right;
+	_screen_buffer buff_left[2];
+	_screen_buffer buff_right[2];
 } _screen;
 typedef struct _ppu_openbus {
 	int32_t bit0;

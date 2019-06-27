@@ -45,10 +45,13 @@ void hqNx(void) {
 	hqnx.startx = 0;
 
 	if (gfx.filter.factor == 2) {
-		hq2x_32_rb(screen.rd->data, gfx.filter.data.pix, (uint32_t *)gfx.filter.data.palette);
+		hq2x_32_rb(screen.rd_left->data, gfx.filter.data.pix_left, (uint32_t *)gfx.filter.data.palette);
+		hq2x_32_rb(screen.rd_right->data, gfx.filter.data.pix_right, (uint32_t *)gfx.filter.data.palette);
 	} else if (gfx.filter.factor == 3) {
-		hq3x_32_rb(screen.rd->data, gfx.filter.data.pix, (uint32_t *)gfx.filter.data.palette);
+		hq3x_32_rb(screen.rd_left->data, gfx.filter.data.pix_left, (uint32_t *)gfx.filter.data.palette);
+		hq3x_32_rb(screen.rd_right->data, gfx.filter.data.pix_right, (uint32_t *)gfx.filter.data.palette);
 	} else if (gfx.filter.factor == 4) {
-		hq4x_32_rb(screen.rd->data, gfx.filter.data.pix, (uint32_t *)gfx.filter.data.palette);
+		hq4x_32_rb(screen.rd_left->data, gfx.filter.data.pix_left, (uint32_t *)gfx.filter.data.palette);
+		hq4x_32_rb(screen.rd_right->data, gfx.filter.data.pix_right, (uint32_t *)gfx.filter.data.palette);
 	}
 }

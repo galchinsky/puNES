@@ -261,7 +261,7 @@ BYTE nsf_load_rom(void) {
 
 		len -= NSF_HEADER_LENGTH;
 
-		if (rom_mem_ctrl_memcpy(&flags[0], &rom, sizeof(flags)) == EXIT_ERROR) { 
+		if (rom_mem_ctrl_memcpy(&flags[0], &rom, sizeof(flags)) == EXIT_ERROR) {
 			free(rom.data);
 			return (EXIT_ERROR);
 		}
@@ -318,7 +318,7 @@ BYTE nsf_load_rom(void) {
 
 				memset(&buffer, 0x00, sizeof(buffer));
 
-				if (rom_mem_ctrl_memcpy(&buffer, &rom, 32) == EXIT_ERROR) { 
+				if (rom_mem_ctrl_memcpy(&buffer, &rom, 32) == EXIT_ERROR) {
 					free(rom.data);
 					return (EXIT_ERROR);
 				}
@@ -335,7 +335,7 @@ BYTE nsf_load_rom(void) {
 		nsf.play_speed.ntsc = rom.data[rom.position++];
 		nsf.play_speed.ntsc |= (rom.data[rom.position++] << 8);
 
-		if (rom_mem_ctrl_memcpy(&nsf.bankswitch.banks, &rom, sizeof(nsf.bankswitch.banks)) == EXIT_ERROR) { 
+		if (rom_mem_ctrl_memcpy(&nsf.bankswitch.banks, &rom, sizeof(nsf.bankswitch.banks)) == EXIT_ERROR) {
 			free(rom.data);
 			return (EXIT_ERROR);
 		}
@@ -392,7 +392,7 @@ BYTE nsf_load_rom(void) {
 					info.machine[DATABASE] = NTSC;
 					break;
 			}
-	
+
 			if (!nsf.play_speed.ntsc) {
 				nsf.play_speed.ntsc = 0x40FF;
 			}
@@ -940,7 +940,8 @@ static void nsf_effect_raw(BYTE solid) {
 
 	for (y = nsf.effect_coords.y1; y <= nsf.effect_coords.y2; y++) {
 		for (x = nsf.effect_coords.x1; x <= nsf.effect_coords.x2; x++) {
-			screen.wr->line[y][x] = doscolor(DOS_BLACK);
+			screen.wr_left->line[y][x] = doscolor(DOS_BLACK);
+			screen.wr_right->line[y][x] = doscolor(DOS_BLACK);
 		}
 	}
 
@@ -956,7 +957,8 @@ static void nsf_effect_raw(BYTE solid) {
 		}
 
 		if ((y >= nsf.effect_coords.y1) && (y < nsf.effect_coords.y2)) {
-			screen.wr->line[y][x] = doscolor(DOS_GREEN);
+			screen.wr_left->line[y][x] = doscolor(DOS_GREEN);
+			screen.wr_right->line[y][x] = doscolor(DOS_GREEN);
 		}
 
 		if (y_last > y) {
@@ -971,8 +973,8 @@ static void nsf_effect_raw(BYTE solid) {
 		}
 
 		for (; a < b; a++) {
-			if (((a >= nsf.effect_coords.y1) && (a <= nsf.effect_coords.y2)) && (screen.wr->line[a][x] != doscolor(DOS_GREEN))) {
-				screen.wr->line[a][x] = doscolor(DOS_YELLOW);
+			if (((a >= nsf.effect_coords.y1) && (a <= nsf.effect_coords.y2)) && (screen.wr_left->line[a][x] != doscolor(DOS_GREEN))) {
+				screen.wr_left->line[a][x] = doscolor(DOS_YELLOW);
 			}
 		}
 
@@ -1000,7 +1002,8 @@ static void nsf_effect_hanning_window(BYTE solid) {
 
 	for (y = nsf.effect_coords.y1; y <= nsf.effect_coords.y2; y++) {
 		for (x = nsf.effect_coords.x1; x <= nsf.effect_coords.x2; x++) {
-			screen.wr->line[y][x] = doscolor(DOS_BLACK);
+			screen.wr_left->line[y][x] = doscolor(DOS_BLACK);
+			screen.wr_right->line[y][x] = doscolor(DOS_BLACK);
 		}
 	}
 
@@ -1017,7 +1020,8 @@ static void nsf_effect_hanning_window(BYTE solid) {
 		}
 
 		if ((y >= nsf.effect_coords.y1) && (y <= nsf.effect_coords.y2)) {
-			screen.wr->line[y][x] = doscolor(DOS_GREEN);
+			screen.wr_left->line[y][x] = doscolor(DOS_GREEN);
+			screen.wr_right->line[y][x] = doscolor(DOS_GREEN);
 		}
 
 		if (y_last > y) {
@@ -1032,8 +1036,9 @@ static void nsf_effect_hanning_window(BYTE solid) {
 		}
 
 		for (; a < b; a++) {
-			if (((a >= nsf.effect_coords.y1) && (a <= nsf.effect_coords.y2)) && (screen.wr->line[a][x] != doscolor(DOS_GREEN))) {
-				screen.wr->line[a][x] = doscolor(DOS_YELLOW);
+			if (((a >= nsf.effect_coords.y1) && (a <= nsf.effect_coords.y2)) && (screen.wr_left->line[a][x] != doscolor(DOS_GREEN))) {
+				screen.wr_left->line[a][x] = doscolor(DOS_YELLOW);
+				screen.wr_right->line[a][x] = doscolor(DOS_YELLOW);
 			}
 		}
 
@@ -1062,7 +1067,8 @@ static void nsf_effect_bars(void) {
 
 	for (y = nsf.effect_coords.y1; y <= nsf.effect_coords.y2; y++) {
 		for (x = nsf.effect_coords.x1; x <= nsf.effect_coords.x2; x++) {
-			screen.wr->line[y][x] = doscolor(DOS_BLACK);
+			screen.wr_left->line[y][x] = doscolor(DOS_BLACK);
+			screen.wr_right->line[y][x] = doscolor(DOS_BLACK);
 		}
 	}
 
@@ -1136,7 +1142,8 @@ static void nsf_effect_bars(void) {
 
 		for (x = x1; x < x2; x++) {
 			if ((y >= nsf.effect_bars_coords.y1) && (y <= nsf.effect_bars_coords.y2)) {
-				screen.wr->line[y][x] = doscolor(DOS_GREEN);
+				screen.wr_left->line[y][x] = doscolor(DOS_GREEN);
+				screen.wr_right->line[y][x] = doscolor(DOS_GREEN);
 			}
 		}
 
@@ -1156,11 +1163,13 @@ static void nsf_effect_bars(void) {
 
 		for (; a <= b; a++) {
 			if ((a >= nsf.effect_bars_coords.y1) && (a <= nsf.effect_bars_coords.y2)) {
-				if (screen.wr->line[a][x1] != doscolor(DOS_GREEN)) {
-					screen.wr->line[a][x1] = doscolor(DOS_RED);
+				if (screen.wr_left->line[a][x1] != doscolor(DOS_GREEN)) {
+					screen.wr_left->line[a][x1] = doscolor(DOS_RED);
+					screen.wr_right->line[a][x1] = doscolor(DOS_RED);
 				}
-				if (screen.wr->line[a][x - 1] != doscolor(DOS_GREEN)) {
-					screen.wr->line[a][x - 1] = doscolor(DOS_GRAY);
+				if (screen.wr_left->line[a][x - 1] != doscolor(DOS_GREEN)) {
+					screen.wr_left->line[a][x - 1] = doscolor(DOS_GRAY);
+					screen.wr_right->line[a][x - 1] = doscolor(DOS_GRAY);
 				}
 			}
 		}
@@ -1953,7 +1962,7 @@ static void nsf_text_curtain_add_line(_nsf_text_curtain *curtain, const char *fm
 				curtain->line[index].length++;
 			}
 			curtain->line[index].text = malloc(curtain->line[index].length + 1);
-			memset(curtain->line[index].text, 0x00, curtain->line[index].length + 1); 
+			memset(curtain->line[index].text, 0x00, curtain->line[index].length + 1);
 			strncpy(curtain->line[index].text, start, curtain->line[index].length);
 			start += curtain->line[index].length;
 		}

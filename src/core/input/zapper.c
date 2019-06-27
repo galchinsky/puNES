@@ -80,7 +80,7 @@ void input_rd_zapper(BYTE *value, BYTE nport, UNUSED(BYTE shift)) {
 				}
 				{
 					int brightness;
-					_color_RGB color = palette_RGB.in_use[screen.wr->line[y_rect][x_rect]];
+					_color_RGB color = palette_RGB.in_use[screen.wr_left->line[y_rect][x_rect]];
 
 					brightness = (color.r * 0.299) + (color.g * 0.587) + (color.b * 0.114);
 					if (brightness > 0x80) {
@@ -142,7 +142,7 @@ void input_rd_zapper_vs(BYTE *value, BYTE nport, UNUSED(BYTE shift)) {
 					}
 					{
 						int brightness;
-						_color_RGB color = palette_RGB.in_use[screen.wr->line[y_rect][x_rect]];
+						_color_RGB color = palette_RGB.in_use[screen.wr_left->line[y_rect][x_rect]];
 
 						brightness = (color.r * 0.299) + (color.g * 0.587) + (color.b * 0.114);
 						if (brightness > 0x80) {

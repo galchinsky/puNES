@@ -415,7 +415,7 @@ static BYTE slot_operation(BYTE mode, BYTE slot, FILE *fp) {
 		save_slot_ele(mode, slot, sprite[i].l_byte)
 		save_slot_ele(mode, slot, sprite[i].h_byte)
 	}
-	// sprite_plus 
+	// sprite_plus
 	for (i = 0; i < LENGTH(sprite_plus); i++) {
 		save_slot_ele(mode, slot, sprite_plus[i].y_C)
 		save_slot_ele(mode, slot, sprite_plus[i].tile)
@@ -497,7 +497,7 @@ static BYTE slot_operation(BYTE mode, BYTE slot, FILE *fp) {
 	save_slot_ele(mode, slot, NS.length.halt)
 	save_slot_ele(mode, slot, NS.sequencer)
 	save_slot_ele(mode, slot, NS.output)
-	// DMC 
+	// DMC
 	save_slot_ele(mode, slot, DMC.frequency)
 	save_slot_ele(mode, slot, DMC.remain)
 	save_slot_ele(mode, slot, DMC.irq_enabled)
@@ -749,7 +749,7 @@ static BYTE slot_operation(BYTE mode, BYTE slot, FILE *fp) {
 		}
 	}
 
-	save_slot_mem(mode, slot, screen.rd->data, screen_size(), TRUE)
+	save_slot_mem(mode, slot, screen.rd_left->data, screen_size(), TRUE)
 
 	return (EXIT_OK);
 }

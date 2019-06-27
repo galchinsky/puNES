@@ -22,9 +22,9 @@
 #define put_pixel(type, p0, p1)\
 	*(type *) (dstpix + p0 + p1) = (type) pixel
 
-INLINE static void scale_surface1x(uint32_t *palette, uint32_t pitch, void *pix);
+INLINE void scale_surface1x(_screen_buffer* screen_buffer, uint32_t *palette, uint32_t pitch, void *pix);
 
-static struct _scl {
+typedef struct _scl {
 	WORD sx;
 	WORD sy;
 	WORD oy;
@@ -32,9 +32,15 @@ static struct _scl {
 	WORD startx;
 	WORD rows;
 	WORD lines;
-} scl;
+} _scl;
 
 void scale_surface(void) {
+	scale_surface1x(screen.rd_left, (uint32_t *)gfx.filter.data.palette, gfx.filter.data.pitch, gfx.filter.data.pix_left);
+	scale_surface1x(screen.rd_right, (uint32_t *)gfx.filter.data.palette, gfx.filter.data.pitch, gfx.filter.data.pix_right);
+}
+
+INLINE void scale_surface1x(_screen_buffer* screen_buffer, uint32_t *palette, uint32_t pitch, void *pix) {
+        _scl scl;
 	scl.sx = 0;
 	scl.sy = 0;
 	scl.oy = 0;
@@ -42,10 +48,6 @@ void scale_surface(void) {
 	scl.rows = SCR_ROWS;
 	scl.startx = 0;
 
-	scale_surface1x((uint32_t *)gfx.filter.data.palette, gfx.filter.data.pitch, gfx.filter.data.pix);
-}
-
-INLINE void scale_surface1x(uint32_t *palette, uint32_t pitch, void *pix) {
 	const uint32_t dstpitch = pitch;
 	uint8_t *dstpix = (uint8_t *) pix;
 	uint32_t TH0, TW0;
@@ -56,7 +58,7 @@ INLINE void scale_surface1x(uint32_t *palette, uint32_t pitch, void *pix) {
 		scl.ox = 0;
 		/* loop per l'intera larghezza dell'immagine */
 		for (scl.sx = scl.startx; scl.sx < scl.rows; scl.sx++) {
-			pixel = palette[screen.rd->line[scl.sy][scl.sx]];
+			pixel = palette[screen_buffer->line[scl.sy][scl.sx]];
 			/*
 			 * converto il colore nel formato corretto di visualizzazione
 			 * e riempio un rettangolo delle dimensioni del fattore di scala

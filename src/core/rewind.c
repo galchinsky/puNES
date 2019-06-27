@@ -130,7 +130,8 @@ struct _rewind_internal {
 	} count;
 	struct _rewind_info_size {
 		size_t keyframe;
-		size_t screen;
+		size_t screen_left;
+		size_t screen_right;
 		size_t input;
 		size_t chunk;
 		size_t first_chunk;
@@ -175,8 +176,8 @@ BYTE rewind_init(void) {
 	}
 
 	rwint.size.chunk = rwint.size.keyframe + (rwint.size.input * REWIND_SNAPS_FOR_CHUNK);
-	rwint.size.first_chunk = rwint.size.screen + rwint.size.chunk;
-	rwint.size.total = rwint.size.screen + (rwint.size.chunk * rwint.chunks_for_segment);
+	rwint.size.first_chunk = rwint.size.screen_left + rwint.size.screen_right + rwint.size.chunk;
+	rwint.size.total = rwint.size.screen_left + rwint.size.screen_right + (rwint.size.chunk * rwint.chunks_for_segment);
 
 	if (rewind_is_disabled() == FALSE) {
 		if ((rwint.segment.data = (BYTE *)malloc(rwint.size.total)) == NULL) {
@@ -430,11 +431,11 @@ INLINE static void rewind_update_chunk_snaps( _rewind_chunk *chunk, int32_t chun
 	uint32_t i;
 
 	if (chunk_index == 0) {
-		start = chunk->data + rwint.size.screen + (rwint.size.chunk * chunk_index);
+		start = chunk->data + rwint.size.screen_left + rwint.size.screen_right + (rwint.size.chunk * chunk_index);
 		chunk->snaps->data = chunk->data;
 	} else {
 		if (chunk->type == REWIND_CHUNK_TYPE_SEGMENT) {
-			start = chunk->data + rwint.size.screen + (rwint.size.chunk * chunk_index);
+			start = chunk->data + rwint.size.screen_left + rwint.size.screen_left + (rwint.size.chunk * chunk_index);
 		} else {
 			start = chunk->data;
 		}
@@ -459,7 +460,8 @@ INLINE static void rewind_operation(BYTE mode, BYTE save_input, _rewind_snapshoo
 
 	if (snap->index.snap == 0) {
 		if (snap->index.chunk == 0) {
-			rewind_on_mem(mode, screen.rd->data, screen_size(), screen);
+			rewind_on_mem(mode, screen.rd_left->data, screen_size(), screen_left);
+			rewind_on_mem(mode, screen.rd_right->data, screen_size(), screen_right);
 		}
 
 		// CPU
@@ -659,7 +661,7 @@ static BYTE _rewind_frames(int32_t frames_to_rewind, BYTE exec_last_frame) {
 	if (index.chunk == 0) {
 		src = rwint.segment.data;
 	} else {
-		src = rwint.segment.data + rwint.size.screen + (rwint.size.chunk * index.chunk);
+		src = rwint.segment.data + rwint.size.screen_left + rwint.size.screen_right + (rwint.size.chunk * index.chunk);
 	}
 
 	if (snaps == 0) {

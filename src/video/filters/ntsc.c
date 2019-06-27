@@ -39,26 +39,39 @@ void ntsc_surface(void) {
 		gfx.filter.data.palette = (void *)ntsc;
 	}
 
-	nes_ntsc_blit((nes_ntsc_t *)gfx.filter.data.palette, screen.rd->data, SCR_ROWS, burst_phase, SCR_ROWS, SCR_LINES,
-		gfx.filter.data.pix, gfx.filter.data.pitch);
+	nes_ntsc_blit((nes_ntsc_t *)gfx.filter.data.palette, screen.rd_left->data, SCR_ROWS, burst_phase, SCR_ROWS, SCR_LINES,
+		gfx.filter.data.pix_left, gfx.filter.data.pitch);
+	nes_ntsc_blit((nes_ntsc_t *)gfx.filter.data.palette, screen.rd_right->data, SCR_ROWS, burst_phase, SCR_ROWS, SCR_LINES,
+		gfx.filter.data.pix_right, gfx.filter.data.pitch);
+
 
 	for (y = ((gfx.filter.data.height / gfx.filter.factor) - 1); --y >= 0;) {
-		unsigned char const *in = ((const unsigned char *)gfx.filter.data.pix) + (y * gfx.filter.data.pitch);
-		unsigned char *out = ((unsigned char *)gfx.filter.data.pix) + ((y * gfx.filter.factor) * gfx.filter.data.pitch);
+		unsigned char const *in_left = ((const unsigned char *)gfx.filter.data.pix_left) + (y * gfx.filter.data.pitch);
+		unsigned char const *in_right = ((const unsigned char *)gfx.filter.data.pix_right) + (y * gfx.filter.data.pitch);
+		unsigned char *out_left = ((unsigned char *)gfx.filter.data.pix_left) + ((y * gfx.filter.factor) * gfx.filter.data.pitch);
+		unsigned char *out_right = ((unsigned char *)gfx.filter.data.pix_right) + ((y * gfx.filter.factor) * gfx.filter.data.pitch);
+
 		int n;
 
 		for (n = gfx.filter.data.width; n; --n) {
-			unsigned prev = *(uint32_t *)in;
-			unsigned next = *(uint32_t *)(in + gfx.filter.data.pitch);
+			unsigned prev_left = *(uint32_t *)in_left;
+			unsigned prev_right = *(uint32_t *)in_right;
+			unsigned next_left = *(uint32_t *)(in_left + gfx.filter.data.pitch);
+			unsigned next_right = *(uint32_t *)(in_right + gfx.filter.data.pitch);
 			/* mix rgb without losing low bits */
-			unsigned mixed = prev + next + ((prev ^ next) & 0x00010101);
+			unsigned mixed_left = prev_left + next_left + ((prev_left ^ next_left) & 0x00010101);
+			unsigned mixed_right = prev_right + next_right + ((prev_right ^ next_right) & 0x00010101);
 
 			/* darken by 12% */
-			*(uint32_t *)out = prev | 0xFF000000;
-			*(uint32_t *)(out + gfx.filter.data.pitch) = ((mixed >> 1) - (mixed >> 4 & 0x00030703)) | 0xFF000000;
+			*(uint32_t *)out_left = prev_left | 0xFF000000;
+			*(uint32_t *)out_right = prev_right | 0xFF000000;
+			*(uint32_t *)(out_left + gfx.filter.data.pitch) = ((mixed_left >> 1) - (mixed_left >> 4 & 0x00030703)) | 0xFF000000;
+			*(uint32_t *)(out_right + gfx.filter.data.pitch) = ((mixed_right >> 1) - (mixed_right >> 4 & 0x00030703)) | 0xFF000000;
 
-			in += NES_NTSC_OUT_DEPTH / 8;
-			out += NES_NTSC_OUT_DEPTH / 8;
+			in_left += NES_NTSC_OUT_DEPTH / 8;
+			out_left += NES_NTSC_OUT_DEPTH / 8;
+			in_right += NES_NTSC_OUT_DEPTH / 8;
+			out_right += NES_NTSC_OUT_DEPTH / 8;
 		}
 	}
 }

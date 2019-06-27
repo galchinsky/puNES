@@ -21,10 +21,15 @@
 
 void xBRZ_init(void) {}
 void xBRZ(void) {
-	xbrz_scale(gfx.filter.factor, screen.rd->data, (uint32_t *)gfx.filter.data.pix, (uint32_t *)gfx.filter.data.palette,
-		SCR_ROWS, SCR_LINES);
+	xbrz_scale(gfx.filter.factor, screen.rd_left->data, (uint32_t *)gfx.filter.data.pix_left, (uint32_t *)gfx.filter.data.palette,
+		   SCR_ROWS, SCR_LINES);
+	xbrz_scale(gfx.filter.factor, screen.rd_right->data, (uint32_t *)gfx.filter.data.pix_right, (uint32_t *)gfx.filter.data.palette,
+		   SCR_ROWS, SCR_LINES);
 }
 void xBRZ_mt(void) {
-	xbrz_scale_mt(gfx.filter.factor, screen.rd->data, (uint32_t *)gfx.filter.data.pix, (uint32_t *)gfx.filter.data.palette,
-		SCR_ROWS, SCR_LINES);
+	xbrz_scale_mt(gfx.filter.factor, screen.rd_left->data, (uint32_t *)gfx.filter.data.pix_left, (uint32_t *)gfx.filter.data.palette,
+		      SCR_ROWS, SCR_LINES);
+	xbrz_scale_mt(gfx.filter.factor, screen.rd_right->data, (uint32_t *)gfx.filter.data.pix_right, (uint32_t *)gfx.filter.data.palette,
+		      SCR_ROWS, SCR_LINES);
+
 }

@@ -55,10 +55,18 @@ enum ppu_misc { PPU_OVERFLOW_SPR = 3 };
 	nmi.cpu_cycles_from_last_nmi++;\
 	/* deve essere azzerato alla fine di ogni ciclo PPU */\
 	r2006.changed_from_op = 0;
-#define put_pixel(clr) screen.wr->line[ppu.screen_y][ppu.frame_x] = r2001.emphasis | clr;
+#define put_pixel(clr) {screen.wr_left->line[ppu.screen_y][ppu.frame_x] = r2001.emphasis | clr;\
+                        screen.wr_right->line[ppu.screen_y][ppu.frame_x] = r2001.emphasis | clr;}
+#define put_pixel_left(clr) {screen.wr_left->line[ppu.screen_y][ppu.frame_x] = r2001.emphasis | clr;}
+#define put_pixel_right(clr) {screen.wr_right->line[ppu.screen_y][ppu.frame_x] = r2001.emphasis | clr;}
+
 #define put_emphasis(clr) put_pixel((mmap_palette.color[clr] & r2001.color_mode))
+#define put_emphasis_left(clr) put_pixel_left((mmap_palette.color[clr] & r2001.color_mode))
+#define put_emphasis_right(clr) put_pixel_right((mmap_palette.color[clr] & r2001.color_mode))
+
 #define put_bg put_emphasis(color_bg)
-#define put_sp put_emphasis(color_sp | 0x10)
+//draw sprites only for left screen
+#define put_sp put_emphasis_right(color_sp | 0x10)
 #define examine_sprites(senv, sp, vis, ty)\
 	/* esamino se ci sono sprite da renderizzare */\
 	for (a = 0; a < senv.count; a++) {\
@@ -178,10 +186,14 @@ void ppu_quit(void) {
 	BYTE a;
 
 	for (a = 0; a < 2; a++) {
-		_screen_buffer *sb = &screen.buff[a];
+		_screen_buffer *sb_left = &screen.buff_left[a];
+		_screen_buffer *sb_right = &screen.buff_right[a];
 
-		if (sb->data) {
-			free(sb->data);
+		if (sb_left->data) {
+			free(sb_left->data);
+		}
+		if (sb_right->data) {
+			free(sb_right->data);
 		}
 	}
 }
@@ -263,7 +275,8 @@ void ppu_tick(void) {
 				r2002.sprite_overflow = r2002.sprite0_hit = r2002.vblank = ppu.vblank = FALSE;
 				// serve assolutamente per la corretta lettura delle coordinate del puntatore zapper
 				if ((info.zapper_is_present == TRUE) && (fps.fast_forward == FALSE)) {
-					memset((BYTE *)screen.wr->data, 0, screen_size());
+					memset((BYTE *)screen.wr_left->data, 0, screen_size());
+					memset((BYTE *)screen.wr_right->data, 0, screen_size());
 				}
 			} else if ((ppu.frame_x == (SHORT_SLINE_CYCLES - 1)) && (machine.type == NTSC)) {
 				/*
@@ -515,7 +528,7 @@ void ppu_tick(void) {
 									 */
 									if (cfg->hide_background) {
 										if (cfg->hide_sprites) {
-											put_pixel(mmap_palette.color[0]);
+											put_pixel_left(mmap_palette.color[0]);
 										} else {
 											put_sp
 										}
@@ -526,7 +539,7 @@ void ppu_tick(void) {
 									/* altrimenti quello dello sprite */
 									if (cfg->hide_sprites) {
 										if (cfg->hide_background) {
-											put_pixel(mmap_palette.color[0]);
+											put_pixel_left(mmap_palette.color[0]);
 										} else {
 											put_bg
 										}
@@ -550,7 +563,7 @@ void ppu_tick(void) {
 								 * sistema (pal o nes e frequenza di aggiornamento).
 								 */
 								if (!r2002.sprite0_hit && !sprite[visible_spr].number && (ppu.frame_x != 255)) {
-									r2002.sprite0_hit = 0x40;
+								  r2002.sprite0_hit = 0x40;
 								}
 							} else {
 								if (sprite_unl[visible_spr_unl].attrib & 0x20) {
@@ -566,7 +579,7 @@ void ppu_tick(void) {
 								} else {
 									if (cfg->hide_sprites) {
 										if (cfg->hide_background) {
-											put_pixel(mmap_palette.color[0]);
+										  put_pixel(mmap_palette.color[0]);
 										} else {
 											put_bg
 										}
@@ -1003,21 +1016,34 @@ BYTE ppu_turn_on(void) {
 		if ((info.reset == CHANGE_ROM) || (info.reset == POWER_UP)) {
 			BYTE a;
 
-			screen.rd = &screen.buff[0];
-			screen.wr = &screen.buff[1];
-			screen.last_completed_wr = screen.wr;
+			screen.rd_left = &screen.buff_left[0];
+			screen.rd_right = &screen.buff_right[0];
+			screen.wr_left = &screen.buff_left[1];
+			screen.wr_right = &screen.buff_right[1];
+			screen.last_completed_wr_left = screen.wr_left;
+			screen.last_completed_wr_right = screen.wr_right;
 
 			for (a = 0; a < 2; a++) {
-				_screen_buffer *sb = &screen.buff[a];
+				_screen_buffer *sb_left = &screen.buff_left[a];
+				_screen_buffer *sb_right = &screen.buff_right[a];
 				BYTE b;
 
-				sb->ready = FALSE;
+				sb_left->ready = FALSE;
+				sb_right->ready = FALSE;
 
-				if (sb->data) {
-					free(sb->data);
+				if (sb_left->data) {
+					free(sb_left->data);
 				}
 
-				if (!(sb->data = (WORD *)malloc(screen_size()))) {
+				if (sb_right->data) {
+					free(sb_right->data);
+				}
+
+				if (!(sb_left->data = (WORD *)malloc(screen_size()))) {
+					fprintf(stderr, "Out of memory\n");
+					return (EXIT_ERROR);
+				}
+				if (!(sb_right->data = (WORD *)malloc(screen_size()))) {
 					fprintf(stderr, "Out of memory\n");
 					return (EXIT_ERROR);
 				}
@@ -1026,8 +1052,12 @@ BYTE ppu_turn_on(void) {
 			 	* all'inizio di ogni linea dello screen.
 			 	*/
 				for (b = 0; b < SCR_LINES; b++) {
-					sb->line[b] = (WORD *)(sb->data + (b * SCR_ROWS));
+					sb_left->line[b] = (WORD *)(sb_left->data + (b * SCR_ROWS));
 				}
+				for (b = 0; b < SCR_LINES; b++) {
+					sb_right->line[b] = (WORD *)(sb_right->data + (b * SCR_ROWS));
+				}
+
 			}
 			/*
 			 * tabella di indici che puntano ad ogni
@@ -1049,11 +1079,13 @@ BYTE ppu_turn_on(void) {
 
 			/* inizializzo lo screen */
 			for (a = 0; a < 2; a++) {
-				_screen_buffer *sb = &screen.buff[a];
+				_screen_buffer *sb_left = &screen.buff_left[a];
+				_screen_buffer *sb_right = &screen.buff_right[a];
 
 				for (y = 0; y < SCR_LINES; y++) {
 					for (x = 0; x < SCR_ROWS; x++) {
-						sb->line[y][x] = 0x000D;
+						sb_left->line[y][x] = 0x000D;
+						sb_right->line[y][x] = 0x000D;
 					}
 				}
 			}

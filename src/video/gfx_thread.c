@@ -148,13 +148,14 @@ static DWORD WINAPI gfx_thread_loop(UNUSED(void *arg)) {
 
 		gfx_thread.in_run = GT_TRUE;
 
-		if (screen.rd->ready == FALSE) {
+		if (screen.rd_left->ready == FALSE) {
 			gui_sleep(1);
 			continue;
 		}
 
 		gfx_thread_public.filtering = TRUE;
-		screen.rd->ready = FALSE;
+		screen.rd_left->ready = FALSE;
+		screen.rd_right->ready = FALSE;
 		gfx_apply_filter();
 		gfx_thread_public.filtering = FALSE;
 	}

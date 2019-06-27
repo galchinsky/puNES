@@ -170,6 +170,13 @@ typedef struct _texture_simple {
 	_texture_rect rect;
 	_shader shader;
 } _texture_simple;
+typedef struct _opengl_surface {
+  GLint w;
+  GLint h;
+  GLint pitch;
+  uint32_t *pixels_left;
+  uint32_t *pixels_right;
+} _opengl_surface;
 typedef struct _opengl {
 	_math_matrix_4x4 mvp;
 	_texture_simple text;
@@ -184,12 +191,8 @@ typedef struct _opengl {
 		BYTE flt;
 		BYTE srgb;
 	} supported_fbo;
-	struct _opengl_surface {
-		GLint w;
-		GLint h;
-		GLint pitch;
-		uint32_t *pixels;
-	} surface;
+
+  	_opengl_surface surface;
 	struct _opengl_screen {
 		GLuint in_use;
 		GLuint index;

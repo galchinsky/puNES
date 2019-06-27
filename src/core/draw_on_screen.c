@@ -679,13 +679,17 @@ void _dos_text(int x, int y, int l, int r, int b, int t, const char *fmt, ...) {
 					}
 
 					if (list[x1] == '@') {
-						screen.wr->line[y + y1][x + x1] = color;
+						screen.wr_left->line[y + y1][x + x1] = color;
+						screen.wr_right->line[y + y1][x + x1] = color;
 					} else if (list[x1] == ',') {
-						screen.wr->line[y + y1][x + x1] = 0x0010;
+						screen.wr_left->line[y + y1][x + x1] = 0x0010;
+						screen.wr_right->line[y + y1][x + x1] = 0x0010;
 					} else if (list[x1] == '.') {
-						screen.wr->line[y + y1][x + x1] = 0x002D;
+						screen.wr_left->line[y + y1][x + x1] = 0x002D;
+						screen.wr_right->line[y + y1][x + x1] = 0x002D;
 					} else {
-						screen.wr->line[y + y1][x + x1] = background;
+						screen.wr_left->line[y + y1][x + x1] = background;
+						screen.wr_right->line[y + y1][x + x1] = background;
 					}
 				}
 				font_y++;
@@ -776,7 +780,8 @@ void dos_vline(int x, int y, int h, WORD color) {
 		if (x >= SCR_ROWS) {
 			break;
 		}
-		screen.wr->line[y + y1][x] = color;
+		screen.wr_left->line[y + y1][x] = color;
+		screen.wr_right->line[y + y1][x] = color;
 	}
 }
 void dos_hline(int x, int y, int w, WORD color) {
@@ -814,7 +819,8 @@ void dos_hline(int x, int y, int w, WORD color) {
 		if ((x + x1) >= SCR_ROWS) {
 			break;
 		}
-		screen.wr->line[y][x + x1] = color;
+		screen.wr_left->line[y][x + x1] = color;
+		screen.wr_right->line[y][x + x1] = color;
 	}
 }
 
@@ -855,4 +861,3 @@ void dos_box(int x, int y, int w, int h, WORD color1, WORD color2, WORD bck) {
 		dos_hline(x + 1, y + y1, w - 2, bck);
 	}
 }
-

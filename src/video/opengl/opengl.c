@@ -181,11 +181,17 @@ BYTE opengl_context_create(void) {
 		opengl.surface.h = h;
 		opengl.surface.pitch = w * sizeof(uint32_t);
 
-		if ((opengl.surface.pixels = malloc(opengl.surface.pitch * h)) == NULL) {
+		if ((opengl.surface.pixels_left = malloc(opengl.surface.pitch * h)) == NULL) {
 			opengl_context_delete();
 			return (EXIT_ERROR);
 		}
-		memset(opengl.surface.pixels, 0x00, opengl.surface.pitch * h);
+		memset(opengl.surface.pixels_left, 0x00, opengl.surface.pitch * h);
+		if ((opengl.surface.pixels_right = malloc(opengl.surface.pitch * h)) == NULL) {
+			opengl_context_delete();
+			return (EXIT_ERROR);
+		}
+		memset(opengl.surface.pixels_right, 0x00, opengl.surface.pitch * h);
+
 	}
 
 	// devo precalcolarmi il viewport finale
@@ -397,7 +403,6 @@ BYTE opengl_context_create(void) {
 
 			// ORIG e PREV texture coord
 			shd->vb[a].origtx[0] = opengl.screen.tex[0].shader.vb[a].s0;
-			shd->vb[a].origtx[1] = opengl.screen.tex[0].shader.vb[a].t0;
 
 			// FEEDBACK
 			if (opengl.feedback.in_use) {
@@ -425,9 +430,10 @@ BYTE opengl_context_create(void) {
 
  	return (EXIT_OK);
 }
-void opengl_draw_scene(void) {
+
+void opengl_draw_scene_per_screen(_texture_simple *scrtex,
+				  uint32_t *pixels, int iii) {
 	static GLuint prev_type = MS_MEM;
-	const _texture_simple *scrtex = &opengl.screen.tex[opengl.screen.index];
 	GLuint offset_x = 0, offset_y = 0;
 	GLuint w = opengl.surface.w, h = opengl.surface.h;
 	GLuint i;
@@ -437,7 +443,7 @@ void opengl_draw_scene(void) {
 	}
 
 	// screen
-	glBindTexture(GL_TEXTURE_2D, scrtex->id);
+	glBindTexture(GL_TEXTURE_2D, scrtex->id); //keypoint
 
 	if (overscan.enabled) {
 		offset_x = overscan.borders->left * gfx.filter.width_pixel;
@@ -449,7 +455,7 @@ void opengl_draw_scene(void) {
 	glPixelStorei(GL_UNPACK_SKIP_PIXELS, offset_x);
 	glPixelStorei(GL_UNPACK_SKIP_ROWS, offset_y);
 	gfx_thread_lock();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, w, h, TI_FRM, TI_TYPE, opengl.surface.pixels);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, w, h, TI_FRM, TI_TYPE, pixels);//the keypoint
 	gfx_thread_unlock();
 	glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
 	glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
@@ -460,6 +466,7 @@ void opengl_draw_scene(void) {
 	}
 
 	// fbo e pass
+
 	for (i = 0; i < shader_effect.pass; i++) {
 		const _texture *texture = &opengl.texture[i];
 		const _shader_pass *sp = &shader_effect.sp[i];
@@ -482,8 +489,8 @@ void opengl_draw_scene(void) {
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(texture->vp.x, texture->vp.y, texture->vp.w, texture->vp.h);
+		//glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(texture->vp.x+texture->vp.w*0, texture->vp.y, texture->vp.w, texture->vp.h);
 		glBindTexture(GL_TEXTURE_2D, id);
 		if (sp->mipmap_input) {
 			glGenerateMipmap(GL_TEXTURE_2D);
@@ -574,15 +581,34 @@ void opengl_draw_scene(void) {
 	}
 }
 
+void opengl_draw_scene(void) {
+  _texture_simple *scrtex = &opengl.screen.tex[opengl.screen.index];
+  glColorMask(1, 0, 0, 1);
+  //int scr_idx = opengl.screen.index;
+  opengl_draw_scene_per_screen(scrtex, opengl.surface.pixels_left, 0);
+  glColorMask(0, 1, 1, 1);
+  //opengl.screen.index = scr_idx;
+  opengl_draw_scene_per_screen(scrtex, opengl.surface.pixels_right, 1);
+  //glColorMask(1, 1, 1, 1);
+}
+
 static void opengl_context_delete(void) {
 	GLuint i;
 
-	if (opengl.surface.pixels) {
-		free(opengl.surface.pixels);
+	if (opengl.surface.pixels_left) {
+		free(opengl.surface.pixels_left);
 		opengl.surface.w = 0;
 		opengl.surface.h = 0;
 		opengl.surface.pitch = 0;
-		opengl.surface.pixels = NULL;
+		opengl.surface.pixels_left = NULL;
+	}
+
+	if (opengl.surface.pixels_right) {
+		free(opengl.surface.pixels_right);
+		opengl.surface.w = 0;
+		opengl.surface.h = 0;
+		opengl.surface.pitch = 0;
+		opengl.surface.pixels_right = NULL;
 	}
 
 	opengl_shader_glsl_disable_attrib();
